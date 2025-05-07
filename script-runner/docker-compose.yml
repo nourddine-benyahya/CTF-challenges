@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=sqlite:////app/site.db
+    volumes:
+      - uploads:/app/uploads
+      - database:/app
+    command: >
+      sh -c "flask db upgrade && gunicorn -b :5000 --access-logfile - --error-logfile - 'app:create_app()'"
+
+volumes:
+  uploads:
+  database:

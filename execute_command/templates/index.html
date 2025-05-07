@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Your Scripts</h1>
+<table>
+    <tr>
+        <th>Filename</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    {% for script in scripts %}
+    <tr>
+        <td>{{ script.filename }}</td>
+        <td>{{ script.status }}</td>
+        <td><a href="{{ url_for('result', script_id=script.id) }}">View Result</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
