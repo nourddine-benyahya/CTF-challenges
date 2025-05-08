@@ -1,7 +1,0 @@
-flask
-flask-sqlalchemy
-flask-login
-flask-wtf
-werkzeug
-python-dotenv
-gunicorn
