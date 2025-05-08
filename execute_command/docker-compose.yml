@@ -32,4 +32,4 @@ volumes:
 
 secrets:
   secret_key:
-    file: secret_key.txt
+    file: ../secret_key.txt

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, FileField
-from wtforms.validators import DataRequired, Length, Email, ValidationError
+from wtforms.validators import DataRequired, Length, Email, ValidationError, EqualTo
 from models import User
 
 class RegistrationForm(FlaskForm):
@@ -10,6 +10,8 @@ class RegistrationForm(FlaskForm):
         DataRequired(), Email()])
     password = PasswordField('Password', validators=[
         DataRequired(), Length(min=8)])
+    confirm_password = PasswordField('Confirm Password', validators=[
+        DataRequired(), EqualTo('password', message='Passwords must match')])
     submit = SubmitField('Register')
 
     def validate_username(self, username):

@@ -10,8 +10,14 @@ try {
     }
 } catch (e) {}
 
-// CTF Flag
-const SECRET_TOKEN = 'MED{H4D4_T4H0W4_M4CHI_L4FL4G}';
+// Misleading trap
+const misleadingTrap = () => {
+    const fakeFlag = 'FAKE{THIS_IS_NOT_THE_FLAG}';
+    console.log(fakeFlag);
+};
+
+// Real CTF Flag
+const SECRET_TOKEN = 'MED{H4RD3R_T0_3XTR4CT_FL4G}';
 
 // Sandbox escape payload
 window.parent.postMessage({

@@ -8,11 +8,15 @@ import uuid
 import subprocess
 import re
 from threading import Thread
-from models import db, User, Script
+from extensions import db
+from models import User, Script
 from forms import RegistrationForm, LoginForm, UploadForm
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = open('secret_key.txt').read().strip()
+try:
+    app.config['SECRET_KEY'] = open('/run/secrets/secret_key').read().strip()
+except FileNotFoundError:
+    app.config['SECRET_KEY'] = 'MED{H4D4_M4CHI_FL4GE}'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024  # 1MB file limit
@@ -25,14 +29,15 @@ login_manager.login_view = 'login'
 # Security configuration
 FORBIDDEN_PATTERNS = [
     # Command patterns
-    r'\b(apt|apt-get|yum|dnf|pacman|git|curl|wget|pip|npm|pnpm)\b',
+    r'^\s*file\b', 
+    r'\b(apt|apt-get|yum|dnf|pacman|git|wget|pip|npm|pnpm)\b',
     r'\b(rm|mv|cp|chmod|chown|install|dd|shred|mkfs|fdisk)\b',
-    r'\b(cat|head|tail|more|less|nl|hexdump|xxd|strings)\b',
+    r'\b(cat|rev|read|while|awk|sed|tr|grep|head|tail|more|less|nl|hexdump|xxd|strings)\b',
     r'\b(echo\s+>[^&]|>>|<\s*[^&])\b',  # Redirection
-    r'\b(bash|sh|zsh|python|perl|ruby|php|node|ruby)\b',
-    r'\b(ssh|scp|sftp|ftp|nc|netcat|socat|telnet|nmap)\b',
-    r'\b(sudo|su|doas|pkexec|visudo|useradd)\b',
-    r'\b(cron|at|systemctl|service|kill|pkill|killall)\b',
+    r'\b(zsh|ed|python|perl|ruby|php|node|ruby|tac|more|echo|debugfs|dd|tar|m4|sh|nl|for|split)\b',
+    r'\b(ssh|scp|sftp|ftp|rsync|paste|pr|gzip|zcat|nc|netcat|socat|telnet|nmap)\b',
+    r'\b(sudo|ex|su|doas|pkexec|visudo|useradd)\b',
+    r'\b(cron|at|base64|od|systemctl|service|kill|pkill|killall)\b',
     r'\$(?:\(|\{)[^)]+',  # Command substitution
     r'`',                # Backticks
     r'\b(alias|exec|source|export)\b',
@@ -53,15 +58,27 @@ FORBIDDEN_PATTERNS = [
     
     # Network patterns
     r'\b(\d{1,3}\.){3}\d{1,3}\b',  # IP addresses
-    r'\b(http|https|ftp|sftp)://\b',
+    r'\b(http|ftp|sftp)://\b',
     r':/\d{1,5}\b'       # Port numbers
+    r'\b(sort|cut|fold|fmt|uniq|cmp|comm|join|expand|unexpand)\b',
+    r'\b[a-zA-Z]{2}\s+[a-zA-Z]{2}\b',  # Detect split commands (e.g., "ca t")
+    r'\$[a-zA-Z]+\$[a-zA-Z]+',          # Variable concatenation (e.g., $a$b)
+    r'\\\w+',                            # Escaped commands (e.g., c\at)
+    r'\/(\w{1,3}\/){2}',                 # Short path segments (e.g., /???/passwd)
+    r'\d{3}',                            # Octal numbers (e.g., \143)
+    r'\b(eval|declare)\b',               # Dangerous builtins
+    r'\b(sort|cut|fold|fmt|uniq|cmp|comm|join|expand|unexpand)\b',
+    r'\b[a-zA-Z]{2}\s+[a-zA-Z]{2}\b',  # Detect split commands (e.g., "ca t")
+    r'\$[a-zA-Z]+\$[a-zA-Z]+',          # Variable concatenation (e.g., $a$b)
+    r'\\\w+',                            # Escaped commands (e.g., c\at)
+    r'\/(\w{1,3}\/){2}',                 # Short path segments (e.g., /???/passwd)
+    r'\d{3}',                            # Octal numbers (e.g., \143)
+    r'\b(eval|declare)\b',               # Dangerous builtins
 ]
 
 ALLOWED_SHEBANGS = {
     '#!/bin/bash',
-    '#!/usr/bin/env bash',
     '#!/bin/sh',
-    '#!/usr/bin/env sh'
 }
 
 @login_manager.user_loader
@@ -89,7 +106,10 @@ def validate_script(filepath):
         # Check for path traversal
         if any('../' in line or '/..' in line for line in lines):
             return False, "Path traversal detected"
-
+         # Normalize paths before checking traversal
+        normalized = os.path.normpath(content)
+        if any(part == '..' for part in normalized.split(os.sep)):
+            return False, "Path traversal detected"
         return True, "Validation passed"
     except Exception as e:
         return False, f"Validation error: {str(e)}"
@@ -181,12 +201,16 @@ def upload():
             with app.app_context():
                 script = Script.query.get(script_id)
                 try:
+                    # Ensure the script has executable permissions
+                    os.chmod(path, 0o700)
+
                     # Restricted execution environment
                     result = subprocess.run(
                         ['bash', path],
                         capture_output=True,
                         text=True,
                         timeout=30,
+                        
                         env={
                             'PATH': '/bin:/usr/bin',
                             'HOME': '/tmp',
@@ -205,7 +229,10 @@ def upload():
                     script.stderr = str(e)[:512]
                     script.status = 'error'
                 finally:
-                    os.remove(path)
+                    try:
+                        os.remove(path)
+                    except Exception as cleanup_error:
+                        script.stderr += f"\nCleanup error: {str(cleanup_error)}"
                     db.session.commit()
 
         Thread(target=execute_script, args=(script.id, filepath)).start()
