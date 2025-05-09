@@ -1,6 +1,5 @@
 FROM python:3.12-slim
 
-# Install Docker CLI and dependencies
 RUN apt-get update && \
     apt-get install -y \
         curl \
@@ -12,7 +11,6 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y docker-ce-cli
 
-# Rest of your original Dockerfile
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app

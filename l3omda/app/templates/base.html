@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flask Auth</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="{{ url_for('main.index') }}">Flask Auth</a>
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav mr-auto">
+            {% if current_user.is_authenticated %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('main.user_page') }}">User</a></li>
+                {% if current_user.has_role('l3omda') %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.l3omda_page') }}">L3OMDA</a></li>
+                {% endif %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('security.logout') }}">Logout</a></li>
+            {% else %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('security.login') }}">Login</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('security.register') }}">Register</a></li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+<div class="container mt-4">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</div>
+</body>
+</html>

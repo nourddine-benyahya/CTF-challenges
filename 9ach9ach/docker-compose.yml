@@ -7,4 +7,4 @@ services:
       dockerfile: Dockerfile
     ports:
       - "4040:80"
-    container_name: ctf-web-container
+    container_name: 9ach9ach

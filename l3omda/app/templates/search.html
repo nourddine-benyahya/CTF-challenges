@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Search Results</h2>
+<table class="table table-bordered">
+  <thead>
+    <tr><th>ID</th><th>Email</th></tr>
+  </thead>
+  <tbody>
+    {% for row in results %}
+    <tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<a href="{{ url_for('main.user_page') }}" class="btn btn-secondary">Back to Dashboard</a>
+{% endblock %}

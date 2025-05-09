@@ -16,64 +16,60 @@ app = Flask(__name__)
 try:
     app.config['SECRET_KEY'] = open('/run/secrets/secret_key').read().strip()
 except FileNotFoundError:
-    app.config['SECRET_KEY'] = 'MED{H4D4_M4CHI_FL4GE}'
+    app.config['SECRET_KEY'] = 'MED{H4D4_M4CHI_FL4GE_hhhhhhhhhhhhh}'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024  # 1MB file limit
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 100
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# Security configuration
 FORBIDDEN_PATTERNS = [
-    # Command patterns
     r'^\s*file\b', 
     r'\b(apt|apt-get|yum|dnf|pacman|git|wget|pip|npm|pnpm)\b',
     r'\b(rm|mv|cp|chmod|chown|install|dd|shred|mkfs|fdisk)\b',
     r'\b(cat|rev|read|while|awk|sed|tr|grep|head|tail|more|less|nl|hexdump|xxd|strings)\b',
-    r'\b(echo\s+>[^&]|>>|<\s*[^&])\b',  # Redirection
+    r'\b(echo\s+>[^&]|>>|<\s*[^&])\b', 
     r'\b(zsh|ed|python|perl|ruby|php|node|ruby|tac|more|echo|debugfs|dd|tar|m4|sh|nl|for|split)\b',
     r'\b(ssh|scp|sftp|ftp|rsync|paste|pr|gzip|zcat|nc|netcat|socat|telnet|nmap)\b',
     r'\b(sudo|ex|su|doas|pkexec|visudo|useradd)\b',
     r'\b(cron|at|base64|od|systemctl|service|kill|pkill|killall)\b',
-    r'\$(?:\(|\{)[^)]+',  # Command substitution
-    r'`',                # Backticks
+    r'\$(?:\(|\{)[^)]+',  
+    r'`',                
     r'\b(alias|exec|source|export)\b',
     
-    # Path patterns
     r'/(etc|var|home|root|dev|proc|sys|boot)\b',
     r'\s~/',
     r'\$HOME',
-    r'\.\./',            # Path traversal
-    r'/\.\.',            # Path traversal
+    r'\.\./',            
+    r'/\.\.',            
     
-    # Special characters
-    r'&&',               # Command chaining
-    r'\|\|',             # OR operators
-    r';',                # Command separator
-    r'\\x[0-9a-fA-F]{2}',# Hex escapes
-    r'\\(?!n)',          # Backslash escapes
+    r'&&',               
+    r'\|\|',            
+    r';',                
+    r'\\x[0-9a-fA-F]{2}',
+    r'\\(?!n)',          
     
-    # Network patterns
-    r'\b(\d{1,3}\.){3}\d{1,3}\b',  # IP addresses
+    
+    r'\b(\d{1,3}\.){3}\d{1,3}\b',  
     r'\b(http|ftp|sftp)://\b',
-    r':/\d{1,5}\b'       # Port numbers
+    r':/\d{1,5}\b'       
     r'\b(sort|cut|fold|fmt|uniq|cmp|comm|join|expand|unexpand)\b',
-    r'\b[a-zA-Z]{2}\s+[a-zA-Z]{2}\b',  # Detect split commands (e.g., "ca t")
-    r'\$[a-zA-Z]+\$[a-zA-Z]+',          # Variable concatenation (e.g., $a$b)
-    r'\\\w+',                            # Escaped commands (e.g., c\at)
-    r'\/(\w{1,3}\/){2}',                 # Short path segments (e.g., /???/passwd)
-    r'\d{3}',                            # Octal numbers (e.g., \143)
-    r'\b(eval|declare)\b',               # Dangerous builtins
+    r'\b[a-zA-Z]{2}\s+[a-zA-Z]{2}\b',  
+    r'\$[a-zA-Z]+\$[a-zA-Z]+',          
+    r'\\\w+',                            
+    r'\/(\w{1,3}\/){2}',                 
+    r'\d{3}',                           
+    r'\b(eval|declare)\b',               
     r'\b(sort|cut|fold|fmt|uniq|cmp|comm|join|expand|unexpand)\b',
-    r'\b[a-zA-Z]{2}\s+[a-zA-Z]{2}\b',  # Detect split commands (e.g., "ca t")
-    r'\$[a-zA-Z]+\$[a-zA-Z]+',          # Variable concatenation (e.g., $a$b)
-    r'\\\w+',                            # Escaped commands (e.g., c\at)
-    r'\/(\w{1,3}\/){2}',                 # Short path segments (e.g., /???/passwd)
-    r'\d{3}',                            # Octal numbers (e.g., \143)
-    r'\b(eval|declare)\b',               # Dangerous builtins
+    r'\b[a-zA-Z]{2}\s+[a-zA-Z]{2}\b',  
+    r'\$[a-zA-Z]+\$[a-zA-Z]+',          
+    r'\\\w+',                            
+    r'\/(\w{1,3}\/){2}',                 
+    r'\d{3}',                           
+    r'\b(eval|declare)\b',              
 ]
 
 ALLOWED_SHEBANGS = {
@@ -94,19 +90,15 @@ def validate_script(filepath):
             content = f.read().lower()
             lines = [line.strip() for line in content.split('\n')]
 
-        # Check shebang line
         if not lines or lines[0] not in [s.lower() for s in ALLOWED_SHEBANGS]:
             return False, "Invalid/missing shebang line"
 
-        # Check for forbidden patterns
         for pattern in FORBIDDEN_PATTERNS:
             if re.search(pattern, content, flags=re.IGNORECASE):
                 return False, f"Forbidden pattern: {pattern}"
 
-        # Check for path traversal
         if any('../' in line or '/..' in line for line in lines):
             return False, "Path traversal detected"
-         # Normalize paths before checking traversal
         normalized = os.path.normpath(content)
         if any(part == '..' for part in normalized.split(os.sep)):
             return False, "Path traversal detected"
@@ -181,14 +173,12 @@ def upload():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(filepath)
         
-        # Validate script
         is_valid, message = validate_script(filepath)
         if not is_valid:
             os.remove(filepath)
             flash(f'Invalid script: {message}', 'danger')
             return redirect(url_for('upload'))
         
-        # Save to database
         script = Script(
             filename=unique_filename,
             user_id=current_user.id,
@@ -201,10 +191,8 @@ def upload():
             with app.app_context():
                 script = Script.query.get(script_id)
                 try:
-                    # Ensure the script has executable permissions
                     os.chmod(path, 0o700)
 
-                    # Restricted execution environment
                     result = subprocess.run(
                         ['bash', path],
                         capture_output=True,
@@ -218,7 +206,7 @@ def upload():
                         },
                         executable='/bin/bash'
                     )
-                    script.stdout = result.stdout[:4096]  # Limit output
+                    script.stdout = result.stdout[:4096]
                     script.stderr = result.stderr[:4096]
                     script.returncode = result.returncode
                     script.status = 'completed'
