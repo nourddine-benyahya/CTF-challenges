@@ -1,7 +1,0 @@
-Flask
-Flask-Login
-Flask-WTF
-Flask
-flask_sqlalchemy
-email_validator
-werkzeug
