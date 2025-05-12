@@ -1,6 +1,0 @@
-flask
-flask-sqlalchemy
-flask-security-too
-psycopg2-binary
-gunicorn
-email-validator
