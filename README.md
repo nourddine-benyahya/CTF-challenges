@@ -6,7 +6,7 @@ Welcome to our Capture The Flag (CTF) Challenge Collection! This repository cont
 
 ## 📂 Challenge Categories
 
-[**View Web Challenges Details**](./web/README.md)
+[**View Web Challenges Details**](./Web/README.md)
 
 [**View DFIR Challenge Details**](./DFIR/README.md)
 
